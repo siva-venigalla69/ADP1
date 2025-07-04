@@ -1,75 +1,146 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { useAuth } from '@/contexts/AuthContext';
+import { useDesigns } from '@/hooks/useDesigns';
+import DesignGrid from '@/components/gallery/DesignGrid';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const categories = ['All', 'UI/UX', 'Web', 'Mobile', 'Branding', 'Print'];
 
-export default function HomeScreen() {
+export default function GalleryScreen() {
+  const { user, logout } = useAuth();
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  
+  const { designs, loading, refreshing, error, hasMore, refresh, loadMore } = useDesigns({
+    category: selectedCategory === 'All' ? undefined : selectedCategory,
+  });
+
+  const handleCategoryPress = (category: string) => {
+    setSelectedCategory(category);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Welcome back,</Text>
+          <Text style={styles.username}>{user?.username}</Text>
+        </View>
+        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Categories */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoriesContainer}
+        contentContainerStyle={styles.categoriesContent}
+      >
+        {categories.map((category) => (
+          <TouchableOpacity
+            key={category}
+            style={[
+              styles.categoryButton,
+              selectedCategory === category && styles.categoryButtonActive,
+            ]}
+            onPress={() => handleCategoryPress(category)}
+          >
+            <Text
+              style={[
+                styles.categoryText,
+                selectedCategory === category && styles.categoryTextActive,
+              ]}
+            >
+              {category}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Gallery Grid */}
+      <View style={styles.gallery}>
+        <DesignGrid
+          designs={designs}
+          loading={loading}
+          refreshing={refreshing}
+          onRefresh={refresh}
+          onLoadMore={loadMore}
+          hasMore={hasMore}
+          error={error || undefined}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    padding: 20,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  greeting: {
+    fontSize: 14,
+    color: '#666',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  username: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  logoutButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  logoutText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  categoriesContainer: {
+    backgroundColor: 'white',
+  },
+  categoriesContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  categoryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginRight: 12,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+  },
+  categoryButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  categoryText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  categoryTextActive: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  gallery: {
+    flex: 1,
   },
 });
