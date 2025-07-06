@@ -1,25 +1,26 @@
-name = "design-gallery-worker"
-main = "src/index.ts"
+name = "design-gallery-fastapi-worker"
+main = "main.py"
 compatibility_date = "2024-01-01"
 
+# Database configuration
 [[d1_databases]]
-binding = "DB" # This is the variable name your Worker uses (e.g., env.DB)
-database_name = "design-gallery-db" # The name of your D1 database
+binding = "DB"
+database_name = "design-gallery-db"
 database_id = "d6b6a330-ee0e-4ffb-9382-51af55485da4"
-# For local, you generally don't need a database_id here, as Wrangler manages the local SQLite file.
-# However, if you explicitly want to link a *preview* database for local dev that's tied to a remote D1,
-# you might use `preview_database_id = "d6b6a330-ee0e-4ffb-9382-51af55485da4"` or the database_id from a specific *preview* D1 database.
-# For simple --local execution, leaving database_id out or using `preview_database_id` is fine.
-# Let's keep it simple for now:
-# database_id = "some-local-id-if-needed" # Often not strictly needed for --local command execution
-# --- End of added section ---
 
+# R2 bucket configuration for image storage
 [[r2_buckets]]
-binding = "GALLERY_BUCKET" # This is the variable name your Worker uses (e.g., env.GALLERY_BUCKET)
-bucket_name = "design-gallery-images" # The name of your R2 bucket
+binding = "GALLERY_BUCKET"
+bucket_name = "design-gallery-images"
 
+# Environment variables
+[vars]
+ENVIRONMENT = "development"
+CLOUDFLARE_ACCOUNT_ID = "your-account-id"
+
+# Production environment
 [env.production]
-name = "design-gallery-worker"
+name = "design-gallery-fastapi-worker"
 
 [[env.production.d1_databases]]
 binding = "DB"
@@ -30,6 +31,10 @@ database_id = "d6b6a330-ee0e-4ffb-9382-51af55485da4"
 binding = "GALLERY_BUCKET"
 bucket_name = "design-gallery-images"
 
-[vars]
-ENVIRONMENT = "development"
-# JWT_SECRET removed for security - use wrangler secret put JWT_SECRET instead 
+[env.production.vars]
+ENVIRONMENT = "production"
+CLOUDFLARE_ACCOUNT_ID = "your-account-id"
+
+# Secrets (use wrangler secret put commands)
+# JWT_SECRET - JWT signing secret
+# CLOUDFLARE_API_TOKEN - Cloudflare API token (if needed for additional features) 
