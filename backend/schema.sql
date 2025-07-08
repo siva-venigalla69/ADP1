@@ -76,9 +76,9 @@ CREATE INDEX IF NOT EXISTS idx_user_favorites_design_id ON user_favorites(design
 
 CREATE INDEX IF NOT EXISTS idx_app_settings_key ON app_settings(key);
 
--- Insert default admin user (password: admin123)
+-- Insert default admin user (password: your_secure_password)
 INSERT OR IGNORE INTO users (username, password_hash, is_admin, is_approved) 
-VALUES ('admin', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewzYqN8/LewzYqN8', TRUE, TRUE);
+VALUES ('admin', 'YOUR_GENERATED_HASH_HERE', TRUE, TRUE);
 
 -- Insert default app settings
 INSERT OR IGNORE INTO app_settings (key, value, description) VALUES

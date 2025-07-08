@@ -238,4 +238,51 @@ class UserService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error"
+            )
+    
+    @staticmethod
+    async def change_password(user_id: int, password_change_data) -> bool:
+        """Change user password."""
+        try:
+            # Get current user from database
+            user = await db_manager.get_by_id("users", user_id)
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found"
+                )
+            
+            # Verify current password
+            if not security_manager.verify_password(password_change_data.current_password, user["password_hash"]):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Current password is incorrect"
+                )
+            
+            # Hash new password
+            new_password_hash = security_manager.hash_password(password_change_data.new_password)
+            
+            # Update password in database
+            update_data = {
+                "password_hash": new_password_hash,
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            
+            updated_user = await db_manager.update("users", user_id, update_data)
+            if not updated_user:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to update password"
+                )
+            
+            logger.info(f"Password changed successfully for user {user['username']} (ID: {user_id})")
+            return True
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error changing password for user {user_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error"
             ) 

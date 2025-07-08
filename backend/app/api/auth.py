@@ -4,7 +4,7 @@ Authentication API routes.
 
 from fastapi import APIRouter, Depends, HTTPException
 from app.services.user_service import UserService
-from app.models.user import UserCreate, UserLogin, UserResponse
+from app.models.user import UserCreate, UserLogin, UserResponse, PasswordChange
 from app.models.common import Token, MessageResponse
 from app.core.security import get_current_active_user, TokenData
 
@@ -39,6 +39,27 @@ async def get_current_user_info(current_user: TokenData = Depends(get_current_ac
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@router.put("/change-password", response_model=MessageResponse)
+async def change_password(
+    password_change_data: PasswordChange,
+    current_user: TokenData = Depends(get_current_active_user)
+):
+    """Change user password."""
+    try:
+        success = await UserService.change_password(current_user.user_id, password_change_data)
+        if success:
+            return MessageResponse(
+                message="Password changed successfully",
+                success=True
+            )
+        else:
+            raise HTTPException(status_code=500, detail="Failed to change password")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/logout", response_model=MessageResponse)
